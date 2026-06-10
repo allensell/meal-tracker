@@ -1,0 +1,11 @@
+{
+  "name": "meal-tracker-backend",
+  "scripts": {
+    "dev": "node --watch --experimental-sqlite server.js",
+    "start": "node --experimental-sqlite server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  }
+}
