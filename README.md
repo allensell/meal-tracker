@@ -18,18 +18,25 @@ A full-featured Lunch & Dinner planning web app. Plan your week, track ingredien
 
 ## Setup
 
+### First time only
+
 ```bash
 # 1. Clone / download the project
 cd meal-tracker
 
-# 2. Install all dependencies (root + backend + frontend)
+# 2. Install all dependencies (root + backend + frontend) — one-time step
 npm run install:all
+```
 
-# 3. Start the dev servers (backend on :3001, frontend on :5173)
+### Every time you want to run the app
+
+```bash
 npm run dev
 ```
 
 Then open **http://localhost:5173** in your browser.
+
+> You only need to run `npm run install:all` again if you pull updates that add new packages.
 
 ## Project Structure
 
