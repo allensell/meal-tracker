@@ -29,7 +29,7 @@ function RecipeModal({ recipe, onClose, onSaved }) {
   const [instructions, setInstructions] = useState(recipe?.instructions ?? '')
   const [prepTime, setPrepTime] = useState(recipe?.prep_time_minutes ?? '')
   const [ingredients, setIngredients] = useState(
-    recipe?.ingredients?.map(i => ({ quantity: i.quantity ?? '', unit: i.unit ?? '', name: i.name })) ?? [{ quantity: '', unit: '', name: '' }]
+    recipe?.ingredients?.map(i => ({ id: i.id, quantity: i.quantity ?? '', unit: i.unit ?? '', name: i.name })) ?? [{ quantity: '', unit: '', name: '' }]
   )
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)

@@ -250,28 +250,32 @@ app.put('/api/recipes/:id', (req, res) => {
       if (prep_time_minutes !== undefined) prepare('UPDATE recipes SET prep_time_minutes = ? WHERE id = ?').run(prep_time_minutes, req.params.id);
 
       if (ingredients !== undefined) {
-        // Fetch old ingredient IDs first, then delete referencing meal_ingredients explicitly
-        const oldIngIds = prepare('SELECT id FROM ingredients WHERE recipe_id = ?').all(req.params.id).map(r => r.id);
-        if (oldIngIds.length > 0) {
-          for (const ingId of oldIngIds) {
-            prepare('DELETE FROM meal_ingredients WHERE ingredient_id = ?').run(ingId);
-          }
-        }
-        prepare('DELETE FROM ingredients WHERE recipe_id = ?').run(req.params.id);
+        const sentIds = ingredients.filter(i => i.id).map(i => i.id);
+        const existingIds = prepare('SELECT id FROM ingredients WHERE recipe_id = ?').all(req.params.id).map(r => r.id);
+
+        // UPDATE existing rows in place (no deletion = no FK issue)
         for (const ing of ingredients) {
-          prepare(
-            'INSERT INTO ingredients (recipe_id, quantity, unit, name) VALUES (?, ?, ?, ?)'
-          ).run(req.params.id, ing.quantity || null, ing.unit || null, ing.name);
-        }
-        // Re-populate meal_ingredients for any meals still assigned to this recipe
-        const affectedMeals = prepare('SELECT id FROM meals WHERE recipe_id = ?').all(req.params.id);
-        const newIngredients = prepare('SELECT id, quantity FROM ingredients WHERE recipe_id = ?').all(req.params.id);
-        for (const meal of affectedMeals) {
-          for (const ing of newIngredients) {
-            prepare(
-              'INSERT INTO meal_ingredients (meal_id, ingredient_id, custom_quantity, purchased) VALUES (?, ?, ?, 0)'
-            ).run(meal.id, ing.id, ing.quantity);
+          if (ing.id) {
+            prepare('UPDATE ingredients SET quantity=?, unit=?, name=? WHERE id=?')
+              .run(ing.quantity || null, ing.unit || null, ing.name, ing.id);
+          } else {
+            // New ingredient — insert and add to any meals using this recipe
+            const res = prepare('INSERT INTO ingredients (recipe_id, quantity, unit, name) VALUES (?,?,?,?)')
+              .run(req.params.id, ing.quantity || null, ing.unit || null, ing.name);
+            const newIngId = res.lastInsertRowid;
+            const affectedMeals = prepare('SELECT id FROM meals WHERE recipe_id = ?').all(req.params.id);
+            for (const meal of affectedMeals) {
+              prepare('INSERT INTO meal_ingredients (meal_id, ingredient_id, custom_quantity, purchased) VALUES (?,?,?,0)')
+                .run(meal.id, newIngId, ing.quantity || null);
+            }
           }
+        }
+
+        // DELETE ingredients the user removed, cleaning up meal_ingredients first
+        const removedIds = existingIds.filter(id => !sentIds.includes(id));
+        for (const ingId of removedIds) {
+          prepare('DELETE FROM meal_ingredients WHERE ingredient_id = ?').run(ingId);
+          prepare('DELETE FROM ingredients WHERE id = ?').run(ingId);
         }
       }
     });
