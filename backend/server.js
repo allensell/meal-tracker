@@ -250,12 +250,13 @@ app.put('/api/recipes/:id', (req, res) => {
       if (prep_time_minutes !== undefined) prepare('UPDATE recipes SET prep_time_minutes = ? WHERE id = ?').run(prep_time_minutes, req.params.id);
 
       if (ingredients !== undefined) {
-        // Remove meal_ingredients that reference the old ingredient rows before deleting them
-        prepare(`
-          DELETE FROM meal_ingredients WHERE ingredient_id IN (
-            SELECT id FROM ingredients WHERE recipe_id = ?
-          )
-        `).run(req.params.id);
+        // Fetch old ingredient IDs first, then delete referencing meal_ingredients explicitly
+        const oldIngIds = prepare('SELECT id FROM ingredients WHERE recipe_id = ?').all(req.params.id).map(r => r.id);
+        if (oldIngIds.length > 0) {
+          for (const ingId of oldIngIds) {
+            prepare('DELETE FROM meal_ingredients WHERE ingredient_id = ?').run(ingId);
+          }
+        }
         prepare('DELETE FROM ingredients WHERE recipe_id = ?').run(req.params.id);
         for (const ing of ingredients) {
           prepare(
