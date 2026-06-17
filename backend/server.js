@@ -250,11 +250,27 @@ app.put('/api/recipes/:id', (req, res) => {
       if (prep_time_minutes !== undefined) prepare('UPDATE recipes SET prep_time_minutes = ? WHERE id = ?').run(prep_time_minutes, req.params.id);
 
       if (ingredients !== undefined) {
+        // Remove meal_ingredients that reference the old ingredient rows before deleting them
+        prepare(`
+          DELETE FROM meal_ingredients WHERE ingredient_id IN (
+            SELECT id FROM ingredients WHERE recipe_id = ?
+          )
+        `).run(req.params.id);
         prepare('DELETE FROM ingredients WHERE recipe_id = ?').run(req.params.id);
         for (const ing of ingredients) {
           prepare(
             'INSERT INTO ingredients (recipe_id, quantity, unit, name) VALUES (?, ?, ?, ?)'
           ).run(req.params.id, ing.quantity || null, ing.unit || null, ing.name);
+        }
+        // Re-populate meal_ingredients for any meals still assigned to this recipe
+        const affectedMeals = prepare('SELECT id FROM meals WHERE recipe_id = ?').all(req.params.id);
+        const newIngredients = prepare('SELECT id, quantity FROM ingredients WHERE recipe_id = ?').all(req.params.id);
+        for (const meal of affectedMeals) {
+          for (const ing of newIngredients) {
+            prepare(
+              'INSERT INTO meal_ingredients (meal_id, ingredient_id, custom_quantity, purchased) VALUES (?, ?, ?, 0)'
+            ).run(meal.id, ing.id, ing.quantity);
+          }
         }
       }
     });
