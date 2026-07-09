@@ -210,6 +210,23 @@ export default function MealForm({ weekId, dayOfWeek, mealType, meal, onClose })
     }
   }
 
+  const handleCheckAll = async () => {
+    const allChecked = mealIngredients.every(m => m.purchased)
+    const newVal = allChecked ? 0 : 1
+    try {
+      await Promise.all(mealIngredients.map(mi =>
+        fetch(`/api/meal_ingredients/${mi.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ purchased: newVal })
+        })
+      ))
+      setMealIngredients(prev => prev.map(m => ({ ...m, purchased: newVal })))
+    } catch (e) {
+      alert('Error updating: ' + e.message)
+    }
+  }
+
   const handleDelete = async () => {
     if (!meal?.id) return
     if (!confirm('Remove this meal from the week?')) return
@@ -356,7 +373,14 @@ export default function MealForm({ weekId, dayOfWeek, mealType, meal, onClose })
           {tab === 'ingredients' && (
             <div>
               <div className="modal-section">
-                <div className="modal-section-title">Ingredients to Purchase</div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <div className="modal-section-title" style={{ margin: 0 }}>Ingredients to Purchase</div>
+                  {mealIngredients.length > 0 && (
+                    <button type="button" className="btn btn-secondary btn-sm" onClick={handleCheckAll}>
+                      {mealIngredients.every(m => m.purchased) ? 'Uncheck All' : 'Check All'}
+                    </button>
+                  )}
+                </div>
                 {mealIngredients.length === 0 ? (
                   <div className="text-muted text-sm">No ingredients tracked for this meal.</div>
                 ) : (
