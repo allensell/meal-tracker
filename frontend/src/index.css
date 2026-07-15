@@ -519,6 +519,48 @@ body {
   color: var(--gray-400);
 }
 
+/* ── Shopping List ── */
+.shopping-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.shopping-item {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  font-size: 14px;
+  color: var(--gray-700);
+  padding: 6px 10px;
+  background: var(--gray-50);
+  border-radius: var(--radius-sm);
+}
+
+.shopping-item::before {
+  content: '•';
+  color: var(--green-400);
+  font-size: 16px;
+  line-height: 1;
+}
+
+.shopping-qty {
+  color: var(--gray-500);
+  min-width: 28px;
+}
+
+.shopping-unit {
+  color: var(--gray-500);
+}
+
+.shopping-name {
+  color: var(--gray-800);
+  font-weight: 500;
+}
+
 /* ── Star Rating ── */
 .star-rating { display: flex; gap: 4px; }
 
