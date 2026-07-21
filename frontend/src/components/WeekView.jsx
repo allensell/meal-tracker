@@ -6,22 +6,74 @@ import MealForm from './MealForm.jsx'
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const DAYS_FULL = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
-function ShoppingListModal({ week, onClose }) {
-  // Gather all unpurchased ingredients grouped by day+meal
-  const groups = []
+// Parse a quantity string to a number, supporting fractions like "1/2"
+function parseQty(str) {
+  if (!str) return null
+  const s = str.trim()
+  const fraction = s.match(/^(\d+)\s*\/\s*(\d+)$/)
+  if (fraction) return parseFloat(fraction[1]) / parseFloat(fraction[2])
+  const mixed = s.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)$/)
+  if (mixed) return parseFloat(mixed[1]) + parseFloat(mixed[2]) / parseFloat(mixed[3])
+  const num = parseFloat(s)
+  return isNaN(num) ? null : num
+}
+
+// Format a number back to a clean string, converting decimals back to fractions where obvious
+function formatQty(n) {
+  if (n === Math.floor(n)) return String(n)
+  const fractions = [[0.25,'1/4'],[0.5,'1/2'],[0.75,'3/4'],[0.333,'1/3'],[0.667,'2/3']]
+  const whole = Math.floor(n)
+  const dec = n - whole
+  for (const [val, str] of fractions) {
+    if (Math.abs(dec - val) < 0.01) return whole > 0 ? `${whole} ${str}` : str
+  }
+  return n.toFixed(2).replace(/\.?0+$/, '')
+}
+
+function buildCombinedList(week) {
+  // Collect all unpurchased items across all meals
+  const all = []
   if (week?.meals) {
-    const sorted = [...week.meals].sort((a, b) =>
-      a.day_of_week !== b.day_of_week ? a.day_of_week - b.day_of_week : a.meal_type.localeCompare(b.meal_type)
-    )
-    for (const meal of sorted) {
-      const unpurchased = (meal.meal_ingredients || []).filter(mi => !mi.purchased)
-      if (unpurchased.length > 0) {
-        groups.push({ meal, items: unpurchased })
+    for (const meal of week.meals) {
+      for (const mi of meal.meal_ingredients || []) {
+        if (!mi.purchased) all.push(mi)
       }
     }
   }
 
-  const total = groups.reduce((sum, g) => sum + g.items.length, 0)
+  // Group by name (case-insensitive) + unit (case-insensitive)
+  const map = new Map()
+  for (const mi of all) {
+    const key = `${mi.name.trim().toLowerCase()}||${(mi.unit || '').trim().toLowerCase()}`
+    if (!map.has(key)) {
+      map.set(key, { name: mi.name.trim(), unit: mi.unit || '', quantities: [], rawQtys: [] })
+    }
+    const qty = mi.custom_quantity || mi.orig_quantity || ''
+    map.get(key).rawQtys.push(qty)
+    const parsed = parseQty(qty)
+    map.get(key).quantities.push(parsed)
+  }
+
+  // Build combined items
+  return Array.from(map.values()).map(({ name, unit, quantities, rawQtys }) => {
+    const allNumeric = quantities.every(q => q !== null)
+    let displayQty
+    if (allNumeric && quantities.length > 0) {
+      displayQty = formatQty(quantities.reduce((a, b) => a + b, 0))
+    } else if (rawQtys.some(q => q)) {
+      // Mix of numeric and text — join unique values
+      const unique = [...new Set(rawQtys.filter(Boolean))]
+      displayQty = unique.join(' + ')
+    } else {
+      displayQty = ''
+    }
+    return { name, unit, displayQty, count: quantities.length }
+  }).sort((a, b) => a.name.localeCompare(b.name))
+}
+
+function ShoppingListModal({ week, onClose }) {
+  const combined = buildCombinedList(week)
+  const total = combined.length
 
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
@@ -36,29 +88,22 @@ function ShoppingListModal({ week, onClose }) {
           <button className="modal-close" onClick={onClose}>×</button>
         </div>
         <div className="modal-body">
-          {groups.length === 0 ? (
+          {combined.length === 0 ? (
             <div className="empty-state" style={{ padding: '32px 0' }}>
               <div className="empty-state-icon">🛒</div>
               <div className="empty-state-text">Nothing left to buy — all ingredients are checked off!</div>
             </div>
           ) : (
-            groups.map(({ meal, items }) => (
-              <div key={meal.id} className="modal-section">
-                <div className="modal-section-title">
-                  {DAYS_FULL[meal.day_of_week]} {meal.meal_type.charAt(0).toUpperCase() + meal.meal_type.slice(1)}
-                  {meal.recipe?.name && <span style={{ fontWeight: 400, color: 'var(--gray-500)', marginLeft: '6px' }}>— {meal.recipe.name}</span>}
-                </div>
-                <ul className="shopping-list">
-                  {items.map(mi => (
-                    <li key={mi.id} className="shopping-item">
-                      {mi.custom_quantity || mi.orig_quantity ? <span className="shopping-qty">{mi.custom_quantity || mi.orig_quantity}</span> : null}
-                      {mi.unit ? <span className="shopping-unit">{mi.unit}</span> : null}
-                      <span className="shopping-name">{mi.name}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))
+            <ul className="shopping-list">
+              {combined.map((item, i) => (
+                <li key={i} className="shopping-item">
+                  {item.displayQty && <span className="shopping-qty">{item.displayQty}</span>}
+                  {item.unit && <span className="shopping-unit">{item.unit}</span>}
+                  <span className="shopping-name">{item.name}</span>
+                  {item.count > 1 && <span className="shopping-badge">{item.count} meals</span>}
+                </li>
+              ))}
+            </ul>
           )}
         </div>
         <div className="modal-footer">
