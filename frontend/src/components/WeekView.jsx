@@ -75,6 +75,22 @@ function ShoppingListModal({ week, onClose }) {
   const combined = buildCombinedList(week)
   const total = combined.length
 
+  const handleExport = () => {
+    const lines = [`Shopping List — ${formatWeekRange(week.start_date)}`, '']
+    for (const item of combined) {
+      const qty = item.displayQty ? item.displayQty + ' ' : ''
+      const unit = item.unit ? item.unit + ' ' : ''
+      lines.push(`- ${qty}${unit}${item.name}`)
+    }
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `shopping-list-${week.start_date}.txt`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal">
@@ -107,6 +123,11 @@ function ShoppingListModal({ week, onClose }) {
           )}
         </div>
         <div className="modal-footer">
+          {combined.length > 0 && (
+            <button className="btn btn-secondary" onClick={handleExport} style={{ marginRight: 'auto' }}>
+              ⬇ Export .txt
+            </button>
+          )}
           <button className="btn btn-primary" onClick={onClose}>Done</button>
         </div>
       </div>
