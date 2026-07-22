@@ -7,6 +7,7 @@ A full-featured Lunch & Dinner planning web app. Plan your week, track ingredien
 - **Weekly meal planning** — a Mon–Sun grid with Lunch and Dinner slots for each day
 - **Recipe library** — store recipes with step-by-step instructions, ingredients, and prep times
 - **Ingredient tracking** — check off ingredients as you shop, with a per-cell progress indicator
+- **Shopping List** - For the Week you can gather a shopping list of all the weeks unchecked ingredients that if there are multiple they shall be combined.  This list can be downloaded.
 - **Meal logging** — log actual prep time and a 1–5 star rating after cooking
 - **Past weeks** — browse previous weeks and "pull forward" any week's plan into the current week
 - **Inline recipe creation** — create new recipes directly from the meal assignment modal
