@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom'
 import WeekView from './components/WeekView.jsx'
 import PastWeeks from './components/PastWeeks.jsx'
 import RecipeLibrary from './components/RecipeLibrary.jsx'
+import Reports from './components/Reports.jsx'
 
 export default function App() {
   return (
@@ -23,6 +24,9 @@ export default function App() {
               <NavLink to="/recipes" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
                 Recipes
               </NavLink>
+              <NavLink to="/reports" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+                Reports
+              </NavLink>
             </nav>
           </div>
         </header>
@@ -32,6 +36,7 @@ export default function App() {
             <Route path="/weeks/:id" element={<WeekView />} />
             <Route path="/past-weeks" element={<PastWeeks />} />
             <Route path="/recipes" element={<RecipeLibrary />} />
+            <Route path="/reports" element={<Reports />} />
           </Routes>
         </main>
       </div>

@@ -294,6 +294,70 @@ app.delete('/api/recipes/:id', (req, res) => {
   res.json({ success: true });
 });
 
+// ─── Reports ─────────────────────────────────────────────────────────────────
+
+app.get('/api/reports', (req, res) => {
+  const round = (val) => val == null ? null : Math.round(val * 10) / 10;
+
+  const overall = prepare(`
+    SELECT
+      AVG(rating) as avg_rating,
+      AVG(CASE WHEN meal_type='lunch' THEN rating ELSE NULL END) as lunch_avg_rating,
+      AVG(CASE WHEN meal_type='dinner' THEN rating ELSE NULL END) as dinner_avg_rating,
+      AVG(prep_time_minutes) as overall_avg_prep,
+      AVG(CASE WHEN meal_type='lunch' THEN prep_time_minutes ELSE NULL END) as lunch_avg_prep,
+      AVG(CASE WHEN meal_type='dinner' THEN prep_time_minutes ELSE NULL END) as dinner_avg_prep
+    FROM meals
+    WHERE rating IS NOT NULL OR prep_time_minutes IS NOT NULL
+  `).get();
+
+  const byWeek = prepare(`
+    SELECT
+      w.start_date,
+      AVG(m.rating) as avg_rating,
+      AVG(CASE WHEN m.meal_type='lunch' THEN m.rating ELSE NULL END) as lunch_avg_rating,
+      AVG(CASE WHEN m.meal_type='dinner' THEN m.rating ELSE NULL END) as dinner_avg_rating,
+      AVG(m.prep_time_minutes) as avg_prep,
+      AVG(CASE WHEN m.meal_type='lunch' THEN m.prep_time_minutes ELSE NULL END) as lunch_avg_prep,
+      AVG(CASE WHEN m.meal_type='dinner' THEN m.prep_time_minutes ELSE NULL END) as dinner_avg_prep
+    FROM weeks w
+    JOIN meals m ON m.week_id = w.id
+    WHERE m.rating IS NOT NULL OR m.prep_time_minutes IS NOT NULL
+    GROUP BY w.id
+    ORDER BY w.start_date ASC
+  `).all();
+
+  const notes = prepare(`
+    SELECT m.notes, m.rating, m.prep_time_minutes, m.meal_type, m.day_of_week, r.name as recipe_name, w.start_date
+    FROM meals m
+    JOIN recipes r ON r.id = m.recipe_id
+    JOIN weeks w ON w.id = m.week_id
+    WHERE m.notes IS NOT NULL AND m.notes != ''
+    ORDER BY w.start_date ASC, m.day_of_week ASC, m.meal_type ASC
+  `).all();
+
+  res.json({
+    overall: {
+      avg_rating: round(overall.avg_rating),
+      lunch_avg_rating: round(overall.lunch_avg_rating),
+      dinner_avg_rating: round(overall.dinner_avg_rating),
+      overall_avg_prep: round(overall.overall_avg_prep),
+      lunch_avg_prep: round(overall.lunch_avg_prep),
+      dinner_avg_prep: round(overall.dinner_avg_prep),
+    },
+    byWeek: byWeek.map(w => ({
+      start_date: w.start_date,
+      avg_rating: round(w.avg_rating),
+      lunch_avg_rating: round(w.lunch_avg_rating),
+      dinner_avg_rating: round(w.dinner_avg_rating),
+      avg_prep: round(w.avg_prep),
+      lunch_avg_prep: round(w.lunch_avg_prep),
+      dinner_avg_prep: round(w.dinner_avg_prep),
+    })),
+    notes,
+  });
+});
+
 // ─── Start Server ─────────────────────────────────────────────────────────────
 
 const PORT = 3001;
