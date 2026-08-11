@@ -6,11 +6,12 @@ A full-featured Lunch & Dinner planning web app. Plan your week, track ingredien
 
 - **Weekly meal planning** — a Mon–Sun grid with Lunch and Dinner slots for each day
 - **Recipe library** — store recipes with step-by-step instructions, ingredients, and prep times
-- **Ingredient tracking** — check off ingredients as you shop, with a per-cell progress indicator
-- **Shopping List** - For the Week you can gather a shopping list of all the weeks unchecked ingredients that if there are multiple they shall be combined.  This list can be downloaded to a text file.
+- **Ingredient tracking** — check off ingredients as you shop, with a per-cell progress indicator and Check All / Uncheck All button
+- **Shopping list** — all unpurchased ingredients for the week combined and deduplicated, with quantities summed; exportable as a .txt file
 - **Meal logging** — log actual prep time and a 1–5 star rating after cooking
 - **Past weeks** — browse previous weeks and "pull forward" any week's plan into the current week
 - **Inline recipe creation** — create new recipes directly from the meal assignment modal
+- **Reports** — charts and stats for ratings and prep times (overall, lunch, dinner, and by week), plus a downloadable notes export
 
 ## Prerequisites
 
@@ -54,11 +55,12 @@ meal-tracker/
         ├── App.jsx          # Router + nav shell
         ├── index.css        # All styles (CSS variables, no frameworks)
         └── components/
-            ├── WeekView.jsx      # Main weekly grid page
+            ├── WeekView.jsx      # Main weekly grid page + shopping list modal
             ├── MealSlot.jsx      # Individual day/meal cell
             ├── MealForm.jsx      # Modal: assign recipe, manage ingredients, log rating
             ├── RecipeLibrary.jsx # Browse, create, edit, delete recipes
-            └── PastWeeks.jsx     # History + pull-forward feature
+            ├── PastWeeks.jsx     # History + pull-forward feature
+            └── Reports.jsx       # Charts and stats for ratings, prep times, and notes
 ```
 
 ## Feature Walkthrough
@@ -120,6 +122,24 @@ Lists all weeks with meal counts. Two actions per week:
 
 Use the **← Prev** / **Next →** buttons on any week view to move between weeks. Navigating forward past the last saved week automatically creates a new blank week.
 
+### Shopping List
+
+Click **🛒 Shopping List** in the top-right of any week view to open the shopping list modal. It shows all unpurchased ingredients for the week:
+- Duplicate ingredients (same name and unit) are combined into one line with quantities summed
+- Numeric quantities are added up; fractions like `1/2` and `1 1/4` are supported
+- Items appearing in multiple meals show a badge (e.g. "3 meals")
+- Click **⬇ Export .txt** to download the list as a text file named `shopping-list-YYYY-MM-DD.txt`
+
+### Reports (`/reports`)
+
+The Reports page provides stats and charts across all your logged meals:
+
+- **Stat cards** — Overall, Lunch, and Dinner averages for both rating (★) and prep time (min)
+- **Weekly Ratings chart** — grouped bar chart showing overall, lunch, and dinner average ratings by week
+- **Weekly Prep Time chart** — same view for prep times in minutes
+- **Notes** — a table of every meal that has notes logged, showing date, meal type, recipe, rating, prep time, and the note text
+- **⬇ Download Notes (.txt)** — exports all notes to a formatted text file
+
 ## API Overview
 
 | Method | Endpoint | Description |
@@ -133,6 +153,7 @@ Use the **← Prev** / **Next →** buttons on any week view to move between wee
 | PUT | `/api/meals/:id` | Update meal (rating, prep time, notes, recipe) |
 | DELETE | `/api/meals/:id` | Remove meal |
 | PUT | `/api/meal_ingredients/:id` | Toggle purchased status |
+| GET | `/api/reports` | Aggregated ratings, prep times, and notes for reports |
 | GET | `/api/recipes` | List all recipes |
 | POST | `/api/recipes` | Create recipe with ingredients |
 | GET | `/api/recipes/:id` | Get recipe with ingredients |
