@@ -833,3 +833,74 @@ body {
 
 .notes-table tbody tr:last-child td { border-bottom: none; }
 .notes-table tbody tr:hover { background: var(--green-50); }
+
+/* ── Recipe Rankings ── */
+.recipe-rank-card {
+  background: var(--white);
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+}
+
+.recipe-rank-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--green-600);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--green-100);
+}
+
+.recipe-rank-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  counter-reset: rank;
+}
+
+.recipe-rank-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  counter-increment: rank;
+}
+
+.recipe-rank-item::before {
+  content: counter(rank);
+  min-width: 20px;
+  height: 20px;
+  background: var(--green-100);
+  color: var(--green-700);
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.recipe-rank-name {
+  flex: 1;
+  color: var(--gray-800);
+}
+
+.recipe-rank-count {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--green-600);
+  background: var(--green-50);
+  border-radius: 10px;
+  padding: 1px 8px;
+}
+
+.recipe-rank-rating {
+  font-size: 13px;
+  color: var(--gray-600);
+  white-space: nowrap;
+}

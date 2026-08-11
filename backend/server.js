@@ -336,6 +336,42 @@ app.get('/api/reports', (req, res) => {
     ORDER BY w.start_date ASC, m.day_of_week ASC, m.meal_type ASC
   `).all();
 
+  const mostUsedOverall = prepare(`
+    SELECT r.name, COUNT(*) as count
+    FROM meals m JOIN recipes r ON r.id = m.recipe_id
+    GROUP BY m.recipe_id ORDER BY count DESC LIMIT 5
+  `).all();
+
+  const mostUsedLunch = prepare(`
+    SELECT r.name, COUNT(*) as count
+    FROM meals m JOIN recipes r ON r.id = m.recipe_id
+    WHERE m.meal_type = 'lunch'
+    GROUP BY m.recipe_id ORDER BY count DESC LIMIT 5
+  `).all();
+
+  const mostUsedDinner = prepare(`
+    SELECT r.name, COUNT(*) as count
+    FROM meals m JOIN recipes r ON r.id = m.recipe_id
+    WHERE m.meal_type = 'dinner'
+    GROUP BY m.recipe_id ORDER BY count DESC LIMIT 5
+  `).all();
+
+  const topRatedLunch = prepare(`
+    SELECT r.name, ROUND(AVG(m.rating), 1) as avg_rating, COUNT(*) as count
+    FROM meals m JOIN recipes r ON r.id = m.recipe_id
+    WHERE m.meal_type = 'lunch' AND m.rating IS NOT NULL
+    GROUP BY m.recipe_id HAVING COUNT(*) > 2
+    ORDER BY avg_rating DESC LIMIT 5
+  `).all();
+
+  const topRatedDinner = prepare(`
+    SELECT r.name, ROUND(AVG(m.rating), 1) as avg_rating, COUNT(*) as count
+    FROM meals m JOIN recipes r ON r.id = m.recipe_id
+    WHERE m.meal_type = 'dinner' AND m.rating IS NOT NULL
+    GROUP BY m.recipe_id HAVING COUNT(*) > 2
+    ORDER BY avg_rating DESC LIMIT 5
+  `).all();
+
   res.json({
     overall: {
       avg_rating: round(overall.avg_rating),
@@ -355,6 +391,8 @@ app.get('/api/reports', (req, res) => {
       dinner_avg_prep: round(w.dinner_avg_prep),
     })),
     notes,
+    mostUsed: { overall: mostUsedOverall, lunch: mostUsedLunch, dinner: mostUsedDinner },
+    topRated: { lunch: topRatedLunch, dinner: topRatedDinner },
   });
 });
 

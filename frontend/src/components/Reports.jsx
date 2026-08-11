@@ -150,7 +150,7 @@ export default function Reports() {
   if (loading) return <div className="loading-state">Loading reports…</div>
   if (error) return <div className="error-state">Error: {error}</div>
 
-  const { overall, byWeek, notes } = data
+  const { overall, byWeek, notes, mostUsed, topRated } = data
 
   const hasData = overall.avg_rating != null || overall.overall_avg_prep != null
   const totalRated = byWeek.reduce((sum, w) => sum + 1, 0)
@@ -279,6 +279,61 @@ export default function Reports() {
             height={240}
             unit=" min"
           />
+        </div>
+      </div>
+
+      {/* Most Used Recipes */}
+      <div className="chart-section">
+        <h2 className="chart-title">Most Used Recipes</h2>
+        <div className="stat-cards">
+          {[
+            { label: 'Overall', list: mostUsed?.overall },
+            { label: 'Lunch', list: mostUsed?.lunch },
+            { label: 'Dinner', list: mostUsed?.dinner },
+          ].map(({ label, list }) => (
+            <div key={label} className="recipe-rank-card">
+              <div className="recipe-rank-title">{label}</div>
+              {!list || list.length === 0 ? (
+                <div className="text-muted text-sm">No data yet</div>
+              ) : (
+                <ol className="recipe-rank-list">
+                  {list.map((r, i) => (
+                    <li key={i} className="recipe-rank-item">
+                      <span className="recipe-rank-name">{r.name}</span>
+                      <span className="recipe-rank-count">{r.count}×</span>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Top Rated Recipes */}
+      <div className="chart-section">
+        <h2 className="chart-title">Top Rated Recipes <span style={{ fontSize: '13px', fontWeight: 400, color: 'var(--gray-400)' }}>(min. 3 rated entries)</span></h2>
+        <div className="stat-cards" style={{ gridTemplateColumns: '1fr 1fr' }}>
+          {[
+            { label: 'Lunch', list: topRated?.lunch },
+            { label: 'Dinner', list: topRated?.dinner },
+          ].map(({ label, list }) => (
+            <div key={label} className="recipe-rank-card">
+              <div className="recipe-rank-title">{label}</div>
+              {!list || list.length === 0 ? (
+                <div className="text-muted text-sm">Not enough data yet — need at least 3 rated entries per recipe</div>
+              ) : (
+                <ol className="recipe-rank-list">
+                  {list.map((r, i) => (
+                    <li key={i} className="recipe-rank-item">
+                      <span className="recipe-rank-name">{r.name}</span>
+                      <span className="recipe-rank-rating">{'★'.repeat(Math.round(r.avg_rating))}{'☆'.repeat(5 - Math.round(r.avg_rating))} {r.avg_rating}</span>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </div>
+          ))}
         </div>
       </div>
 
