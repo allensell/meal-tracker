@@ -8,6 +8,13 @@ function formatDate(dateStr) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
+function formatMealDate(startDate, dayOfWeek) {
+  if (!startDate) return ''
+  const d = new Date(startDate + 'T00:00:00')
+  d.setDate(d.getDate() + dayOfWeek)
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
 function StarDisplay({ rating }) {
   if (rating == null) return <span>—</span>
   return (
@@ -179,7 +186,7 @@ export default function Reports() {
       const stars = n.rating != null ? '★'.repeat(n.rating) + '☆'.repeat(5 - n.rating) : 'Not rated'
       const prep = n.prep_time_minutes != null ? `${n.prep_time_minutes} min` : 'No prep time'
       return [
-        `${formatDate(n.start_date)} — ${dayName} ${meal} — ${n.recipe_name}`,
+        `${formatMealDate(n.start_date, n.day_of_week)} — ${dayName} ${meal} — ${n.recipe_name}`,
         `Rating: ${stars}  Prep: ${prep}`,
         n.notes,
         '---',
@@ -299,7 +306,7 @@ export default function Reports() {
               <tbody>
                 {notes.map((n, i) => (
                   <tr key={i}>
-                    <td style={{ whiteSpace: 'nowrap' }}>{formatDate(n.start_date)} {DAY_NAMES[n.day_of_week]?.slice(0, 3)}</td>
+                    <td style={{ whiteSpace: 'nowrap' }}>{formatMealDate(n.start_date, n.day_of_week)} {DAY_NAMES[n.day_of_week]?.slice(0, 3)}</td>
                     <td style={{ textTransform: 'capitalize' }}>{n.meal_type}</td>
                     <td>{n.recipe_name}</td>
                     <td style={{ whiteSpace: 'nowrap' }}>
