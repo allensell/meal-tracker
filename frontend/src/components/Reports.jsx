@@ -12,7 +12,7 @@ function formatMealDate(startDate, dayOfWeek) {
   if (!startDate) return ''
   const d = new Date(startDate + 'T00:00:00')
   d.setDate(d.getDate() + dayOfWeek)
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
 function StarDisplay({ rating }) {
