@@ -340,7 +340,10 @@ export default function Reports() {
       {notes.length > 0 && (
         <div className="chart-section">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <h2 className="chart-title" style={{ marginBottom: 0 }}>Meal Notes</h2>
+            <div>
+              <h2 className="chart-title" style={{ marginBottom: 0 }}>Meal Notes</h2>
+              <div style={{ fontSize: '12px', color: 'var(--gray-400)', marginTop: '2px' }}>Only meals with notes entered are shown</div>
+            </div>
             <button className="btn btn-secondary btn-sm" onClick={downloadNotes}>
               ⬇ Download Notes (.csv)
             </button>

@@ -333,7 +333,7 @@ app.get('/api/reports', (req, res) => {
     JOIN recipes r ON r.id = m.recipe_id
     JOIN weeks w ON w.id = m.week_id
     WHERE m.notes IS NOT NULL AND m.notes != ''
-    ORDER BY w.start_date ASC, m.day_of_week ASC, m.meal_type ASC
+    ORDER BY w.start_date ASC, m.day_of_week ASC, CASE WHEN m.meal_type = 'lunch' THEN 0 ELSE 1 END
   `).all();
 
   const mostUsedOverall = prepare(`
