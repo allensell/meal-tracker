@@ -180,25 +180,24 @@ export default function Reports() {
   }
 
   function downloadNotes() {
-    const lines = notes.map(n => {
-      const dayName = DAY_NAMES[n.day_of_week] ?? `Day ${n.day_of_week}`
-      const meal = n.meal_type.charAt(0).toUpperCase() + n.meal_type.slice(1)
-      const stars = n.rating != null ? '★'.repeat(n.rating) + '☆'.repeat(5 - n.rating) : 'Not rated'
-      const prep = n.prep_time_minutes != null ? `${n.prep_time_minutes} min` : 'No prep time'
-      return [
-        `${formatMealDate(n.start_date, n.day_of_week)} — ${dayName} ${meal} — ${n.recipe_name}`,
-        `Rating: ${stars}  Prep: ${prep}`,
-        n.notes,
-        '---',
-      ].join('\n')
-    })
+    const escape = val => `"${String(val ?? '').replace(/"/g, '""')}"`
+    const headers = ['Date', 'Day', 'Meal', 'Recipe', 'Rating', 'Prep Time (min)', 'Notes']
+    const rows = notes.map(n => [
+      escape(formatMealDate(n.start_date, n.day_of_week)),
+      escape(DAY_NAMES[n.day_of_week] ?? ''),
+      escape(n.meal_type.charAt(0).toUpperCase() + n.meal_type.slice(1)),
+      escape(n.recipe_name),
+      escape(n.rating != null ? n.rating : ''),
+      escape(n.prep_time_minutes != null ? n.prep_time_minutes : ''),
+      escape(n.notes),
+    ].join(','))
 
-    const content = ['Meal Notes Export', '=================', '', ...lines].join('\n')
-    const blob = new Blob([content], { type: 'text/plain' })
+    const content = [headers.join(','), ...rows].join('\n')
+    const blob = new Blob([content], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = 'meal-notes.txt'
+    a.download = 'meal-notes.csv'
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -343,7 +342,7 @@ export default function Reports() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <h2 className="chart-title" style={{ marginBottom: 0 }}>Meal Notes</h2>
             <button className="btn btn-secondary btn-sm" onClick={downloadNotes}>
-              ⬇ Download Notes (.txt)
+              ⬇ Download Notes (.csv)
             </button>
           </div>
           <div style={{ overflowX: 'auto' }}>
