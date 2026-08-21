@@ -139,7 +139,7 @@ The Reports page provides stats and charts across all your logged meals:
 - **Weekly Prep Time chart** — same view for prep times in minutes
 - **Most Used Recipes** — top 5 most frequently used recipes ranked by usage count, shown separately for Overall, Lunch, and Dinner
 - **Top Rated Recipes** — top 5 highest-rated recipes for Lunch and Dinner; only recipes with more than 2 rated entries qualify
-- **Notes** — a table of every meal that has notes logged, showing date, meal type, recipe, rating, prep time, and the note text
+- **Notes** — a table of every meal that has notes logged, showing date, meal type, recipe, rating, prep time, and the note text NOTE: IF NO NOTE is present the ENTRY will not be found in the report!
 - **⬇ Download Notes (.txt)** — exports all notes to a formatted text file
 
 ## API Overview
