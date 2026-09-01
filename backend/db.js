@@ -39,6 +39,7 @@ db.exec(`
     day_of_week INTEGER NOT NULL,
     meal_type TEXT NOT NULL CHECK(meal_type IN ('lunch','dinner')),
     recipe_id INTEGER REFERENCES recipes(id),
+    going_out INTEGER DEFAULT 0,
     prep_time_minutes INTEGER,
     rating INTEGER CHECK(rating BETWEEN 1 AND 5),
     notes TEXT,

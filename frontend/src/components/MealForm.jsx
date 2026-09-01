@@ -67,6 +67,7 @@ export default function MealForm({ weekId, dayOfWeek, mealType, meal, onClose })
   const [showDropdown, setShowDropdown] = useState(false)
   const [selectedRecipe, setSelectedRecipe] = useState(null)
   const [showNewRecipe, setShowNewRecipe] = useState(false)
+  const [goingOut, setGoingOut] = useState(!!meal?.going_out)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const searchRef = useRef(null)
@@ -98,6 +99,7 @@ export default function MealForm({ weekId, dayOfWeek, mealType, meal, onClose })
     setRating(meal?.rating ?? null)
     setPrepTime(meal?.prep_time_minutes ?? '')
     setNotes(meal?.notes ?? '')
+    setGoingOut(!!meal?.going_out)
   }, [meal])
 
   const filteredRecipes = recipes.filter(r =>
@@ -146,8 +148,8 @@ export default function MealForm({ weekId, dayOfWeek, mealType, meal, onClose })
         recipeId = newRecipe.id
       }
 
-      if (!recipeId) {
-        alert('Please select or create a recipe')
+      if (!goingOut && !recipeId) {
+        alert('Please select or create a recipe, or choose Going Out')
         setSaving(false)
         return
       }
@@ -157,14 +159,14 @@ export default function MealForm({ weekId, dayOfWeek, mealType, meal, onClose })
         await fetch(`/api/meals/${meal.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ recipe_id: recipeId })
+          body: JSON.stringify({ recipe_id: goingOut ? null : recipeId, going_out: goingOut })
         })
       } else {
         // Create new meal
         await fetch('/api/meals', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ week_id: weekId, day_of_week: dayOfWeek, meal_type: mealType, recipe_id: recipeId })
+          body: JSON.stringify({ week_id: weekId, day_of_week: dayOfWeek, meal_type: mealType, recipe_id: goingOut ? null : recipeId, going_out: goingOut })
         })
       }
       onClose()
@@ -241,7 +243,7 @@ export default function MealForm({ weekId, dayOfWeek, mealType, meal, onClose })
     }
   }
 
-  const hasMeal = !!meal?.recipe_id
+  const hasMeal = !!meal?.recipe_id || !!meal?.going_out
 
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
@@ -253,7 +255,7 @@ export default function MealForm({ weekId, dayOfWeek, mealType, meal, onClose })
             </div>
             {hasMeal && (
               <div style={{ fontSize: '13px', color: 'var(--gray-500)', marginTop: '2px' }}>
-                {meal.recipe?.name}
+                {meal?.going_out ? '🍽 Going Out' : meal.recipe?.name}
               </div>
             )}
           </div>
@@ -264,9 +266,11 @@ export default function MealForm({ weekId, dayOfWeek, mealType, meal, onClose })
           {hasMeal && (
             <div className="tabs">
               <button className={`tab${tab === 'assign' ? ' active' : ''}`} onClick={() => setTab('assign')}>Recipe</button>
-              <button className={`tab${tab === 'ingredients' ? ' active' : ''}`} onClick={() => setTab('ingredients')}>
-                Ingredients {mealIngredients.length > 0 && `(${mealIngredients.filter(m=>m.purchased).length}/${mealIngredients.length})`}
-              </button>
+              {!meal?.going_out && (
+                <button className={`tab${tab === 'ingredients' ? ' active' : ''}`} onClick={() => setTab('ingredients')}>
+                  Ingredients {mealIngredients.length > 0 && `(${mealIngredients.filter(m=>m.purchased).length}/${mealIngredients.length})`}
+                </button>
+              )}
               <button className={`tab${tab === 'log' ? ' active' : ''}`} onClick={() => setTab('log')}>Rate & Log</button>
             </div>
           )}
@@ -275,6 +279,29 @@ export default function MealForm({ weekId, dayOfWeek, mealType, meal, onClose })
           {tab === 'assign' && (
             <div>
               <div className="modal-section">
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                  <button
+                    type="button"
+                    className={`btn btn-sm${!goingOut ? ' btn-primary' : ' btn-secondary'}`}
+                    onClick={() => setGoingOut(false)}
+                  >
+                    🍳 Cook at Home
+                  </button>
+                  <button
+                    type="button"
+                    className={`btn btn-sm${goingOut ? ' btn-primary' : ' btn-secondary'}`}
+                    onClick={() => { setGoingOut(true); setSelectedRecipe(null); setSearchQuery(''); setShowNewRecipe(false) }}
+                  >
+                    🍽 Going Out
+                  </button>
+                </div>
+
+                {goingOut ? (
+                  <div style={{ padding: '16px', background: 'var(--green-50)', border: '1.5px solid var(--green-200)', borderRadius: 'var(--radius-md)', textAlign: 'center', color: 'var(--gray-600)' }}>
+                    🍽 This meal is marked as <strong>Going Out</strong>. No recipe needed!
+                  </div>
+                ) : (
+                  <>
                 <div className="modal-section-title">Select Recipe</div>
                 <div className="recipe-search-wrap">
                   <input
@@ -318,6 +345,8 @@ export default function MealForm({ weekId, dayOfWeek, mealType, meal, onClose })
                       <div style={{ fontSize: '13px', color: 'var(--gray-600)', whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>{selectedRecipe.instructions}</div>
                     )}
                   </div>
+                )}
+                  </>
                 )}
               </div>
 
@@ -450,7 +479,7 @@ export default function MealForm({ weekId, dayOfWeek, mealType, meal, onClose })
           <button className="btn btn-secondary" onClick={onClose}>Cancel</button>
           {tab === 'assign' && (
             <button className="btn btn-primary" onClick={handleSaveAssign} disabled={saving}>
-              {saving ? 'Saving…' : hasMeal ? 'Update Recipe' : 'Add to Week'}
+              {saving ? 'Saving…' : hasMeal ? (goingOut ? 'Update' : 'Update Recipe') : (goingOut ? 'Mark Going Out' : 'Add to Week')}
             </button>
           )}
           {tab === 'log' && (

@@ -119,15 +119,15 @@ app.get('/api/meals/:id', (req, res) => {
 });
 
 app.post('/api/meals', (req, res) => {
-  const { week_id, day_of_week, meal_type, recipe_id } = req.body;
+  const { week_id, day_of_week, meal_type, recipe_id, going_out } = req.body;
   if (week_id == null || day_of_week == null || !meal_type) {
     return res.status(400).json({ error: 'week_id, day_of_week, meal_type required' });
   }
   try {
     const createMeal = transaction(() => {
       const result = prepare(
-        'INSERT INTO meals (week_id, day_of_week, meal_type, recipe_id) VALUES (?, ?, ?, ?)'
-      ).run(week_id, day_of_week, meal_type, recipe_id || null);
+        'INSERT INTO meals (week_id, day_of_week, meal_type, recipe_id, going_out) VALUES (?, ?, ?, ?, ?)'
+      ).run(week_id, day_of_week, meal_type, recipe_id || null, going_out ? 1 : 0);
       const mealId = result.lastInsertRowid;
 
       if (recipe_id) {
@@ -147,7 +147,7 @@ app.post('/api/meals', (req, res) => {
 });
 
 app.put('/api/meals/:id', (req, res) => {
-  const { prep_time_minutes, rating, notes, recipe_id } = req.body;
+  const { prep_time_minutes, rating, notes, recipe_id, going_out } = req.body;
   const meal = prepare('SELECT * FROM meals WHERE id = ?').get(req.params.id);
   if (!meal) return res.status(404).json({ error: 'Meal not found' });
 
@@ -156,6 +156,7 @@ app.put('/api/meals/:id', (req, res) => {
     if (prep_time_minutes !== undefined) prepare('UPDATE meals SET prep_time_minutes = ? WHERE id = ?').run(prep_time_minutes, req.params.id);
     if (rating !== undefined) prepare('UPDATE meals SET rating = ? WHERE id = ?').run(rating, req.params.id);
     if (notes !== undefined) prepare('UPDATE meals SET notes = ? WHERE id = ?').run(notes, req.params.id);
+    if (going_out !== undefined) prepare('UPDATE meals SET going_out = ? WHERE id = ?').run(going_out ? 1 : 0, req.params.id);
     if (recipe_id !== undefined) {
       prepare('UPDATE meals SET recipe_id = ? WHERE id = ?').run(recipe_id, req.params.id);
       if (recipe_id !== meal.recipe_id) {
@@ -372,6 +373,22 @@ app.get('/api/reports', (req, res) => {
     ORDER BY avg_rating DESC LIMIT 5
   `).all();
 
+  const goingOutStats = prepare(`
+    SELECT
+      COUNT(*) as total,
+      SUM(CASE WHEN meal_type='lunch' THEN 1 ELSE 0 END) as lunch_count,
+      SUM(CASE WHEN meal_type='dinner' THEN 1 ELSE 0 END) as dinner_count
+    FROM meals WHERE going_out = 1
+  `).get();
+
+  const mealTotals = prepare(`
+    SELECT
+      COUNT(*) as total,
+      SUM(CASE WHEN meal_type='lunch' THEN 1 ELSE 0 END) as lunch_total,
+      SUM(CASE WHEN meal_type='dinner' THEN 1 ELSE 0 END) as dinner_total
+    FROM meals
+  `).get();
+
   res.json({
     overall: {
       avg_rating: round(overall.avg_rating),
@@ -393,6 +410,14 @@ app.get('/api/reports', (req, res) => {
     notes,
     mostUsed: { overall: mostUsedOverall, lunch: mostUsedLunch, dinner: mostUsedDinner },
     topRated: { lunch: topRatedLunch, dinner: topRatedDinner },
+    goingOut: {
+      total: goingOutStats.total || 0,
+      lunch: goingOutStats.lunch_count || 0,
+      dinner: goingOutStats.dinner_count || 0,
+      totalMeals: mealTotals.total || 0,
+      totalLunch: mealTotals.lunch_total || 0,
+      totalDinner: mealTotals.dinner_total || 0,
+    },
   });
 });
 

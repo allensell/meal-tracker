@@ -150,7 +150,7 @@ export default function Reports() {
   if (loading) return <div className="loading-state">Loading reports…</div>
   if (error) return <div className="error-state">Error: {error}</div>
 
-  const { overall, byWeek, notes, mostUsed, topRated } = data
+  const { overall, byWeek, notes, mostUsed, topRated, goingOut } = data
 
   const hasData = overall.avg_rating != null || overall.overall_avg_prep != null
   const totalRated = byWeek.reduce((sum, w) => sum + 1, 0)
@@ -335,6 +335,36 @@ export default function Reports() {
           ))}
         </div>
       </div>
+
+      {/* Going Out Stats */}
+      {goingOut && goingOut.total > 0 && (
+        <div className="chart-section">
+          <h2 className="chart-title">Going Out</h2>
+          <div className="stat-cards" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+            <div className="stat-card">
+              <div className="stat-card-value">{goingOut.total}</div>
+              <div className="stat-card-label">Total Times Going Out</div>
+              <div style={{ fontSize: '13px', color: 'var(--gray-400)', marginTop: '4px' }}>
+                {goingOut.totalMeals > 0 ? `${Math.round((goingOut.total / goingOut.totalMeals) * 100)}% of all meals` : ''}
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-card-value">{goingOut.lunch}</div>
+              <div className="stat-card-label">Lunches Out</div>
+              <div style={{ fontSize: '13px', color: 'var(--gray-400)', marginTop: '4px' }}>
+                {goingOut.totalLunch > 0 ? `${Math.round((goingOut.lunch / goingOut.totalLunch) * 100)}% of lunches` : ''}
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-card-value">{goingOut.dinner}</div>
+              <div className="stat-card-label">Dinners Out</div>
+              <div style={{ fontSize: '13px', color: 'var(--gray-400)', marginTop: '4px' }}>
+                {goingOut.totalDinner > 0 ? `${Math.round((goingOut.dinner / goingOut.totalDinner) * 100)}% of dinners` : ''}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Notes section */}
       {notes.length > 0 && (

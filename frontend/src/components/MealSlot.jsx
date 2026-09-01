@@ -1,17 +1,18 @@
 export default function MealSlot({ mealType, meal, onClick }) {
-  const hasMeal = !!meal?.recipe_id
+  const isGoingOut = !!meal?.going_out
+  const hasMeal = !!meal?.recipe_id || isGoingOut
 
   const purchasedCount = meal?.meal_ingredients?.filter(mi => mi.purchased).length ?? 0
   const totalCount = meal?.meal_ingredients?.length ?? 0
   const purchasePercent = totalCount > 0 ? (purchasedCount / totalCount) * 100 : 0
 
   return (
-    <div className={`meal-slot${hasMeal ? ' has-meal' : ''}`} onClick={onClick} title="Click to edit">
+    <div className={`meal-slot${hasMeal ? ' has-meal' : ''}${isGoingOut ? ' going-out' : ''}`} onClick={onClick} title="Click to edit">
       <div className="meal-type-label">{mealType}</div>
 
       {hasMeal ? (
         <>
-          <div className="meal-recipe-name">{meal.recipe?.name}</div>
+          <div className="meal-recipe-name">{isGoingOut ? '🍽 Going Out' : meal.recipe?.name}</div>
           <div className="meal-meta">
             {meal.rating != null && (
               <div className="meal-stars">

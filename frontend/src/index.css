@@ -223,6 +223,8 @@ body {
 
 .meal-slot.has-meal { border-color: var(--green-200); background: var(--green-50); }
 .meal-slot.has-meal:hover { border-color: var(--green-400); }
+.meal-slot.going-out { border-color: #d1b3f5; background: #f5f0ff; }
+.meal-slot.going-out:hover { border-color: #a855f7; }
 
 .meal-type-label {
   font-size: 10px;

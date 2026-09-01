@@ -12,6 +12,7 @@ A full-featured Lunch & Dinner planning web app. Plan your week, track ingredien
 - **Past weeks** — browse previous weeks and "pull forward" any week's plan into the current week
 - **Inline recipe creation** — create new recipes directly from the meal assignment modal
 - **Reports** — charts and stats for ratings and prep times (overall, lunch, dinner, and by week), plus a downloadable notes export
+- **Going Out** — mark any meal slot as "Going Out" instead of cooking; tracked separately in the Reports page
 
 ## Prerequisites
 
@@ -79,10 +80,16 @@ Each filled cell shows:
 
 ### Assigning a Meal
 
-In the modal's **Recipe** tab:
+In the modal's **Recipe** tab, first choose whether you're cooking or going out:
+- Click **🍳 Cook at Home** to select or create a recipe.
+- Click **🍽 Going Out** to mark the slot as eating out — no recipe needed.
+
+When cooking:
 1. Type in the search box to filter existing recipes, then click one to select it.
 2. Or click **Create new recipe "…"** at the bottom of the dropdown to create one inline.
 3. Hit **Add to Week** (or **Update Recipe** for an existing assignment).
+
+When going out, hit **Mark Going Out** to save. The slot shows in purple in the week grid.
 
 ### Creating a Recipe Inline
 
@@ -139,6 +146,7 @@ The Reports page provides stats and charts across all your logged meals:
 - **Weekly Prep Time chart** — same view for prep times in minutes
 - **Most Used Recipes** — top 5 most frequently used recipes ranked by usage count, shown separately for Overall, Lunch, and Dinner
 - **Top Rated Recipes** — top 5 highest-rated recipes for Lunch and Dinner; only recipes with more than 2 rated entries qualify
+- **Going Out** — total, lunch, and dinner counts for meals marked as Going Out (shown when at least one exists)
 - **Notes** — a table of every meal that has notes logged, showing date, meal type, recipe, rating, prep time, and the note text NOTE: IF NO NOTE is present the ENTRY will not be found in the report!
 - **⬇ Download Notes (.csv)** — exports all notes to a formatted csv file format
 
