@@ -118,6 +118,8 @@ After cooking, open the slot and go to the **Rate & Log** tab:
 - Search by name
 - Click a card to view full details (ingredients + instructions)
 - Edit or delete any recipe
+- Download the recipe to a text file
+- Print an individual recipe 
 
 ### Past Weeks (`/past-weeks`)
 

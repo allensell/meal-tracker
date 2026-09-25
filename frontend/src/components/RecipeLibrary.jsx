@@ -119,6 +119,46 @@ function RecipeDetailModal({ recipe, onClose, onEdit, onDelete }) {
     }
   }
 
+  const buildRecipeText = () => {
+    const lines = []
+    lines.push(recipe.name)
+    lines.push('='.repeat(recipe.name.length))
+    if (recipe.prep_time_minutes) lines.push(`Prep Time: ${recipe.prep_time_minutes} min`)
+    lines.push('')
+    if (recipe.ingredients && recipe.ingredients.length > 0) {
+      lines.push('Ingredients')
+      lines.push('-----------')
+      recipe.ingredients.forEach(ing => {
+        const parts = [ing.quantity, ing.unit, ing.name].filter(Boolean)
+        lines.push(`  - ${parts.join(' ')}`)
+      })
+      lines.push('')
+    }
+    lines.push('Instructions')
+    lines.push('------------')
+    lines.push(recipe.instructions)
+    return lines.join('\n')
+  }
+
+  const handleDownload = () => {
+    const text = buildRecipeText()
+    const blob = new Blob([text], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${recipe.name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.txt`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const handlePrint = () => {
+    const text = buildRecipeText()
+    const win = window.open('', '_blank')
+    win.document.write(`<pre style="font-family:Georgia,serif;font-size:14px;max-width:600px;margin:40px auto;white-space:pre-wrap;">${text.replace(/</g, '&lt;')}</pre>`)
+    win.document.close()
+    win.print()
+  }
+
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal">
@@ -157,6 +197,8 @@ function RecipeDetailModal({ recipe, onClose, onEdit, onDelete }) {
           <button className="btn btn-danger btn-sm" onClick={handleDelete} disabled={deleting} style={{ marginRight: 'auto' }}>
             {deleting ? 'Deleting…' : 'Delete'}
           </button>
+          <button className="btn btn-secondary btn-sm" onClick={handleDownload} title="Download as .txt">⬇ Download</button>
+          <button className="btn btn-secondary btn-sm" onClick={handlePrint} title="Print recipe">🖨 Print</button>
           <button className="btn btn-secondary" onClick={onClose}>Close</button>
           <button className="btn btn-primary" onClick={() => onEdit(recipe)}>Edit</button>
         </div>
