@@ -337,10 +337,26 @@ export default function Reports() {
       </div>
 
       {/* Going Out Stats */}
-      {goingOut && goingOut.total > 0 && (
+      {goingOut && goingOut.totalMeals > 0 && (
         <div className="chart-section">
-          <h2 className="chart-title">Going Out</h2>
+          <h2 className="chart-title">Meal Totals &amp; Going Out</h2>
           <div className="stat-cards" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+
+            {/* Total row */}
+            <div className="stat-card">
+              <div className="stat-card-value">{goingOut.totalMeals}</div>
+              <div className="stat-card-label">Total Meals Planned</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-card-value">{goingOut.totalLunch}</div>
+              <div className="stat-card-label">Total Lunches Planned</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-card-value">{goingOut.totalDinner}</div>
+              <div className="stat-card-label">Total Dinners Planned</div>
+            </div>
+
+            {/* Going Out row */}
             <div className="stat-card">
               <div className="stat-card-value">{goingOut.total}</div>
               <div className="stat-card-label">Total Times Going Out</div>
@@ -350,18 +366,19 @@ export default function Reports() {
             </div>
             <div className="stat-card">
               <div className="stat-card-value">{goingOut.lunch}</div>
-              <div className="stat-card-label">Lunches Out</div>
+              <div className="stat-card-label">Lunches Going Out</div>
               <div style={{ fontSize: '13px', color: 'var(--gray-400)', marginTop: '4px' }}>
                 {goingOut.totalLunch > 0 ? `${Math.round((goingOut.lunch / goingOut.totalLunch) * 100)}% of lunches` : ''}
               </div>
             </div>
             <div className="stat-card">
               <div className="stat-card-value">{goingOut.dinner}</div>
-              <div className="stat-card-label">Dinners Out</div>
+              <div className="stat-card-label">Dinners Going Out</div>
               <div style={{ fontSize: '13px', color: 'var(--gray-400)', marginTop: '4px' }}>
                 {goingOut.totalDinner > 0 ? `${Math.round((goingOut.dinner / goingOut.totalDinner) * 100)}% of dinners` : ''}
               </div>
             </div>
+
           </div>
         </div>
       )}
