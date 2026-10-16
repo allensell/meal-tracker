@@ -291,6 +291,10 @@ app.put('/api/recipes/:id', (req, res) => {
 });
 
 app.delete('/api/recipes/:id', (req, res) => {
+  const usage = prepare('SELECT COUNT(*) as count FROM meals WHERE recipe_id = ?').get(req.params.id);
+  if (usage.count > 0) {
+    return res.status(409).json({ error: `This recipe has been used in ${usage.count} meal${usage.count !== 1 ? 's' : ''} and cannot be deleted.` });
+  }
   prepare('DELETE FROM recipes WHERE id = ?').run(req.params.id);
   res.json({ success: true });
 });

@@ -107,10 +107,16 @@ function RecipeDetailModal({ recipe, onClose, onEdit, onDelete }) {
   const [deleting, setDeleting] = useState(false)
 
   const handleDelete = async () => {
-    if (!confirm(`Delete "${recipe.name}"? This cannot be undone.`)) return
+    if (!confirm(`Are you sure you want to delete "${recipe.name}"?`)) return
+    if (!confirm(`This will permanently remove "${recipe.name}" from your recipe library. Are you absolutely sure?`)) return
     setDeleting(true)
     try {
-      await fetch(`/api/recipes/${recipe.id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/recipes/${recipe.id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const err = await res.json()
+        alert(err.error || 'Failed to delete recipe')
+        return
+      }
       onDelete(recipe.id)
     } catch (e) {
       alert('Error deleting recipe')
