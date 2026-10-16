@@ -148,7 +148,7 @@ The Reports page provides stats and charts across all your logged meals:
 - **Weekly Prep Time chart** — same view for prep times in minutes
 - **Most Used Recipes** — top 5 most frequently used recipes ranked by usage count, shown separately for Overall, Lunch, and Dinner
 - **Top Rated Recipes** — top 5 highest-rated recipes for Lunch and Dinner; only recipes with more than 2 rated entries qualify
-- **Meal Totals & Going Out** — totals meals overall, total lunch and total dinner as well as total, lunch, and dinner counts for meals marked as Going Out (shown when at least one exists)
+- **Meal Totals & Going Out** — total meals overall, total lunch and total dinner, plus going-out counts and percentages for all meals, lunches, and dinners; includes a weekly trend line chart comparing your actual going-out percentage per week against a user-defined target; set and save your target percentage directly on the Reports page (persists across sessions)
 - **Meal Notes** — a table of every meal that has notes logged, showing date, meal type, recipe, rating, prep time, and the note text NOTE: IF NO NOTE is present the ENTRY will not be found in the report!
 - **⬇ Download Notes (.csv)** — exports all notes to a formatted csv file format
 

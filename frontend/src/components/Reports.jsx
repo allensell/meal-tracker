@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 
 const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
@@ -133,12 +133,107 @@ function BarChart({ data, groups, xKey, yMax, height = 220, unit = '' }) {
   )
 }
 
+// ─── GoingOutTrendChart ───────────────────────────────────────────────────────
+
+function GoingOutTrendChart({ data, target }) {
+  if (!data || data.length === 0) return <p className="text-muted text-sm">No weekly data yet.</p>
+
+  const paddingLeft = 44
+  const paddingRight = 16
+  const paddingTop = 16
+  const paddingBottom = data.length > 5 ? 60 : 40
+  const totalWidth = Math.max(360, data.length * 60 + paddingLeft + paddingRight)
+  const height = 240
+  const chartH = height - paddingTop - paddingBottom
+  const chartW = totalWidth - paddingLeft - paddingRight
+
+  const gridLines = 5
+  const yMax = 100
+
+  const xPos = (i) => paddingLeft + (i / Math.max(data.length - 1, 1)) * chartW
+  const yPos = (val) => paddingTop + chartH - (val / yMax) * chartH
+
+  const linePath = data
+    .map((d, i) => `${i === 0 ? 'M' : 'L'}${xPos(i)},${yPos(d.pct)}`)
+    .join(' ')
+
+  return (
+    <svg viewBox={`0 0 ${totalWidth} ${height}`} width="100%" style={{ display: 'block' }} aria-label="Going out trend chart">
+      {/* gridlines */}
+      {Array.from({ length: gridLines + 1 }, (_, i) => {
+        const val = (yMax / gridLines) * i
+        const y = yPos(val)
+        return (
+          <g key={i}>
+            <line x1={paddingLeft} y1={y} x2={paddingLeft + chartW} y2={y} stroke="var(--gray-200,#e5e7eb)" strokeWidth="1" />
+            <text x={paddingLeft - 6} y={y} textAnchor="end" dominantBaseline="middle" fontSize="10" fill="var(--gray-400,#9ca3af)">{val}%</text>
+          </g>
+        )
+      })}
+
+      {/* target line */}
+      {target != null && (
+        <g>
+          <line
+            x1={paddingLeft} y1={yPos(target)}
+            x2={paddingLeft + chartW} y2={yPos(target)}
+            stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="6,4"
+          />
+          <text x={paddingLeft + chartW + 4} y={yPos(target)} dominantBaseline="middle" fontSize="10" fill="#f59e0b">Target {target}%</text>
+        </g>
+      )}
+
+      {/* actual line */}
+      <path d={linePath} fill="none" stroke="#a855f7" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+
+      {/* dots + values */}
+      {data.map((d, i) => (
+        <g key={i}>
+          <circle cx={xPos(i)} cy={yPos(d.pct)} r="4" fill="#a855f7" />
+          <text x={xPos(i)} y={yPos(d.pct) - 10} textAnchor="middle" fontSize="10" fill="#a855f7">{d.pct}%</text>
+        </g>
+      ))}
+
+      {/* x-axis labels */}
+      {data.map((d, i) => {
+        const x = xPos(i)
+        const y = paddingTop + chartH + 8
+        const label = formatDate(d.start_date)
+        return (
+          <text key={i} x={x} y={y} textAnchor={data.length > 5 ? 'end' : 'middle'} fontSize="10" fill="var(--gray-500,#6b7280)"
+            transform={data.length > 5 ? `rotate(-40,${x},${y})` : undefined}>
+            {label}
+          </text>
+        )
+      })}
+
+      {/* legend */}
+      <g>
+        <circle cx={paddingLeft} cy={height - 10} r="4" fill="#a855f7" />
+        <text x={paddingLeft + 10} y={height - 6} fontSize="10" fill="var(--gray-600,#4b5563)">Actual % Going Out</text>
+        {target != null && (
+          <>
+            <line x1={paddingLeft + 130} y1={height - 10} x2={paddingLeft + 148} y2={height - 10} stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="4,3" />
+            <text x={paddingLeft + 152} y={height - 6} fontSize="10" fill="var(--gray-600,#4b5563)">Target</text>
+          </>
+        )}
+      </g>
+    </svg>
+  )
+}
+
 // ─── Reports ─────────────────────────────────────────────────────────────────
 
 export default function Reports() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [goingOutTarget, setGoingOutTarget] = useState(() => {
+    try { const v = localStorage.getItem('goingOutTarget'); return v != null ? Number(v) : null } catch { return null }
+  })
+  const [targetInput, setTargetInput] = useState(() => {
+    try { const v = localStorage.getItem('goingOutTarget'); return v != null ? v : '' } catch { return '' }
+  })
 
   useEffect(() => {
     fetch('http://localhost:3001/api/reports')
@@ -340,6 +435,47 @@ export default function Reports() {
       {goingOut && goingOut.totalMeals > 0 && (
         <div className="chart-section">
           <h2 className="chart-title">Meal Totals &amp; Going Out</h2>
+
+          {/* Target setting */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
+            <label style={{ fontSize: '14px', color: 'var(--gray-600)', fontWeight: 600 }}>Weekly Going Out Target:</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <input
+                type="number"
+                min="0" max="100"
+                className="form-input"
+                style={{ width: '80px' }}
+                placeholder="e.g. 20"
+                value={targetInput}
+                onChange={e => setTargetInput(e.target.value)}
+              />
+              <span style={{ fontSize: '14px', color: 'var(--gray-500)' }}>%</span>
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={() => {
+                  const v = targetInput === '' ? null : Math.min(100, Math.max(0, Number(targetInput)))
+                  setGoingOutTarget(v)
+                  try { v == null ? localStorage.removeItem('goingOutTarget') : localStorage.setItem('goingOutTarget', v) } catch {}
+                }}
+              >Set</button>
+              {goingOutTarget != null && (
+                <button
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => { setGoingOutTarget(null); setTargetInput(''); try { localStorage.removeItem('goingOutTarget') } catch {} }}
+                >Clear</button>
+              )}
+            </div>
+            {goingOutTarget != null && (
+              <span style={{ fontSize: '13px', color: 'var(--gray-400)' }}>Target: {goingOutTarget}% of meals per week</span>
+            )}
+          </div>
+
+          {/* Trend chart */}
+          {goingOut.byWeek && goingOut.byWeek.length > 0 && (
+            <div className="chart-wrap" style={{ marginBottom: '24px' }}>
+              <GoingOutTrendChart data={goingOut.byWeek} target={goingOutTarget} />
+            </div>
+          )}
           <div className="stat-cards" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
 
             {/* Total row */}

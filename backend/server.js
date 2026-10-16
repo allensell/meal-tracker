@@ -377,6 +377,17 @@ app.get('/api/reports', (req, res) => {
     ORDER BY avg_rating DESC LIMIT 5
   `).all();
 
+  const goingOutByWeek = prepare(`
+    SELECT
+      w.start_date,
+      COUNT(*) as total_meals,
+      SUM(m.going_out) as going_out_count
+    FROM weeks w
+    JOIN meals m ON m.week_id = w.id
+    GROUP BY w.id
+    ORDER BY w.start_date ASC
+  `).all();
+
   const goingOutStats = prepare(`
     SELECT
       COUNT(*) as total,
@@ -421,6 +432,12 @@ app.get('/api/reports', (req, res) => {
       totalMeals: mealTotals.total || 0,
       totalLunch: mealTotals.lunch_total || 0,
       totalDinner: mealTotals.dinner_total || 0,
+      byWeek: goingOutByWeek.map(w => ({
+        start_date: w.start_date,
+        total_meals: w.total_meals,
+        going_out_count: w.going_out_count || 0,
+        pct: w.total_meals > 0 ? Math.round(((w.going_out_count || 0) / w.total_meals) * 100) : 0,
+      })),
     },
   });
 });
